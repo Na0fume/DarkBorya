@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Тёмный Боря</title>
+<audio id="music" src="Боря.mp3" loop></audio>
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #080808;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+#game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+
+    background:
+        radial-gradient(circle at center, #242424, #050505);
+}
+
+/* Сетка на фоне */
+
+#game::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+
+    background-size: 40px 40px;
+
+    pointer-events: none;
+}
+
+/* HUD */
+
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    right: 25px;
+
+    display: flex;
+    justify-content: space-between;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    z-index: 10;
+}
+
+#title {
+    position: absolute;
+    top: 65px;
+    width: 100%;
+
+    text-align: center;
+
+    font-size: 40px;
+    font-weight: bold;
+
+    z-index: 5;
+}
+
+/* ========================= */
+/* БОРЯ */
+/* ========================= */
+
+#player {
+    position: absolute;
+
+    width: 131px;
+    height: 148px;
+
+    left: 0;
+    bottom: 35px;
+
+    z-index: 5;
+
+
+    pointer-events: none;
+}
+#player img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+/* Голова */
+
+.head {
+    position: absolute;
+
+    width: 42px;
+    height: 42px;
+
+    left: 9px;
+    top: 0;
+
+    background: #b98a68;
+
+    border-radius: 50%;
+
+    border: 3px solid #111;
+}
+
+/* Волосы */
+
+.hair {
+    position: absolute;
+
+    width: 44px;
+    height: 18px;
+
+    left: 8px;
+    top: -3px;
+
+    background: #050505;
+
+    border-radius: 50% 50% 20% 20%;
+
+    z-index: 2;
+}
+
+/* Глаза */
+
+.eye {
+    position: absolute;
+
+    width: 5px;
+    height: 5px;
+
+    background: black;
+
+    border-radius: 50%;
+
+    top: 20px;
+}
+
+.eye1 {
+    left: 18px;
+}
+
+.eye2 {
+    left: 31px;
+}
+
+/* Тело */
+
+.body {
+    position: absolute;
+
+    width: 50px;
+    height: 43px;
+
+    left: 5px;
+    top: 38px;
+
+    background: #111;
+
+    border: 2px solid #333;
+
+    border-radius: 12px 12px 5px 5px;
+}
+
+/* Ноги */
+
+.leg {
+    position: absolute;
+
+    width: 14px;
+    height: 25px;
+
+    top: 76px;
+
+    background: #111;
+
+    border-radius: 0 0 5px 5px;
+}
+
+.leg1 {
+    left: 14px;
+}
+
+.leg2 {
+    right: 14px;
+}
+
+/* ========================= */
+/* ПАДАЮЩИЕ ПРЕДМЕТЫ */
+/* ========================= */
+
+.falling {
+    position: absolute;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 4;
+
+    user-select: none;
+}
+
+/* Подсказка */
+
+#hint {
+    position: absolute;
+
+    bottom: 15px;
+
+    width: 100%;
+
+    text-align: center;
+
+    color: #777;
+
+    z-index: 10;
+}
+
+/* ========================= */
+/* GAME OVER */
+/* ========================= */
+
+#gameOver {
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(0,0,0,0.85);
+
+    display: none;
+
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 100;
+
+    text-align: center;
+}
+
+#gameOver h1 {
+    font-size: 55px;
+    margin: 0 0 15px;
+}
+
+#gameOver p {
+    font-size: 25px;
+}
+
+button {
+    margin-top: 20px;
+
+    padding: 14px 35px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+
+    font-size: 20px;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #555;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="hud">
+        <div>❤️ <span id="lives">3</span></div>
+        <div>Счёт: <span id="score">0</span></div>
+    </div>
+
+    <div id="title">
+        ТЁМНЫЙ БОРЯ
+    </div>
+
+    <!-- БОРЯ -->
+
+    <div id="player">
+
+       <div id="player">
+    <img src="borya.jpg" alt="Боря">
+</div>
+
+    </div>
+
+    <div id="hint">
+        ← A &nbsp;&nbsp;&nbsp; D →
+    </div>
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver">
+
+        <h1>БОРЯ ПОПАЛСЯ 💀</h1>
+
+        <p>
+            Счёт:
+            <span id="finalScore">0</span>
+        </p>
+
+        <button onclick="restartGame()">
+            Играть снова
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ========================= */
+/* НАСТРОЙКИ */
+/* ========================= */
+
+const game = document.getElementById("game");
+
+const player = document.getElementById("player");
+
+const scoreText =
+    document.getElementById("score");
+
+const livesText =
+    document.getElementById("lives");
+
+const gameOver =
+    document.getElementById("gameOver");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+
+/* Позиция Бори */
+
+let playerX =
+    window.innerWidth / 2 - 30;
+
+
+/* Скорость */
+
+const playerSpeed = 450;
+
+
+/* Клавиши */
+
+const keys = {};
+
+
+/* Игра */
+
+let score = 0;
+
+let lives = 3;
+
+let running = true;
+
+
+/* Предметы */
+
+let objects = [];
+
+
+/* Скорость падения */
+
+let fallingSpeed = 250;
+
+
+/* Время */
+
+let lastTime = performance.now();
+
+let lastSpawn = 0;
+
+
+/* Предметы */
+
+const items = [
+
+    "icons8-хуй-64.png",
+    "icons8-хуй-64.png",
+    "icons8-хуй-64.png",
+    "icons8-хуй-64.png",
+];
+
+
+/* ========================= */
+/* УПРАВЛЕНИЕ */
+/* ========================= */
+
+document.addEventListener("keydown", function(event) {
+
+    keys[event.key.toLowerCase()] = true;
+
+    /*
+        Чтобы стрелки не двигали страницу
+    */
+
+    if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight"
+    ) {
+
+        event.preventDefault();
+
+    }
+
+});
+
+
+document.addEventListener("keyup", function(event) {
+
+    keys[event.key.toLowerCase()] = false;
+
+});
+
+
+/* ========================= */
+/* ДВИЖЕНИЕ БОРИ */
+/* ========================= */
+
+function movePlayer(delta) {
+
+    /*
+        Влево
+    */
+
+    if (
+        keys["a"] ||
+        keys["arrowleft"]
+    ) {
+
+        playerX -= playerSpeed * delta;
+
+    }
+
+
+    /*
+        Вправо
+    */
+
+    if (
+        keys["d"] ||
+        keys["arrowright"]
+    ) {
+
+        playerX += playerSpeed * delta;
+
+    }
+
+
+    /*
+        Ограничиваем левую границу
+    */
+
+    if (playerX < 0) {
+
+        playerX = 0;
+
+    }
+
+
+    /*
+        Ограничиваем правую границу
+    */
+
+    const maxX =
+        window.innerWidth - 60;
+
+
+    if (playerX > maxX) {
+
+        playerX = maxX;
+
+    }
+
+
+    /*
+        Передвигаем Бору
+    */
+
+    player.style.left =
+        playerX + "px";
+
+}
+
+
+/* ========================= */
+/* СОЗДАНИЕ ПРЕДМЕТА */
+/* ========================= */
+
+function createObject() {
+
+    const element =
+        document.createElement("div");
+
+    element.className =
+        "falling";
+
+
+    const item =
+        items[
+            Math.floor(
+                Math.random() * items.length
+            )
+        ];
+
+
+    element.innerHTML =
+    `<img src="${item}" style="width:100%;height:100%;object-fit:contain;">`;
+
+
+    const size =
+        35 + Math.random() * 25;
+
+
+    element.style.width =
+        size + "px";
+
+    element.style.height =
+        size + "px";
+
+    element.style.fontSize =
+        size * 0.8 + "px";
+
+
+    const x =
+        Math.random() *
+        (window.innerWidth - size);
+
+
+    element.style.left =
+        x + "px";
+
+    element.style.top =
+        -size + "px";
+
+
+    game.appendChild(element);
+
+
+    objects.push({
+
+        element: element,
+
+        x: x,
+
+        y: -size,
+
+        size: size,
+
+        speed:
+            fallingSpeed *
+            (0.7 + Math.random() * 0.6)
+
+    });
+
+}
+
+
+/* ========================= */
+/* ПРОВЕРКА СТОЛКНОВЕНИЯ */
+/* ========================= */
+
+function isColliding(a, b) {
+
+    const A =
+        a.getBoundingClientRect();
+
+    const B =
+        b.getBoundingClientRect();
+
+
+    return (
+
+        A.left < B.right &&
+        A.right > B.left &&
+        A.top < B.bottom &&
+        A.bottom > B.top
+
+    );
+
+}
+
+
+/* ========================= */
+/* ПАДЕНИЕ */
+/* ========================= */
+
+function updateObjects(delta) {
+
+    for (
+        let i = objects.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const obj =
+            objects[i];
+
+
+        obj.y +=
+            obj.speed * delta;
+
+
+        obj.element.style.top =
+            obj.y + "px";
+
+
+        /*
+            Попадание в Бору
+        */
+
+        if (
+            isColliding(
+                player,
+                obj.element
+            )
+        ) {
+
+            damage();
+
+
+            obj.element.remove();
+
+            objects.splice(i, 1);
+
+            continue;
+
+        }
+
+
+        /*
+            Предмет упал мимо
+        */
+
+        if (
+            obj.y >
+            window.innerHeight + 100
+        ) {
+
+            obj.element.remove();
+
+            objects.splice(i, 1);
+
+
+            score++;
+
+            scoreText.innerText =
+                score;
+
+        }
+
+    }
+
+}
+
+
+/* ========================= */
+/* ПОЛУЧЕНИЕ УРОНА */
+/* ========================= */
+
+function damage() {
+
+    lives--;
+
+    livesText.innerText =
+        lives;
+
+
+    if (lives <= 0) {
+
+        endGame();
+
+    }
+
+}
+
+
+/* ========================= */
+/* GAME OVER */
+/* ========================= */
+
+function endGame() {
+
+    running = false;
+
+    finalScore.innerText =
+        score;
+
+    gameOver.style.display =
+        "flex";
+
+}
+
+
+/* ========================= */
+/* РЕСТАРТ */
+/* ========================= */
+
+function restartGame() {
+
+    /*
+        Удаляем старые предметы
+    */
+
+    objects.forEach(function(obj) {
+
+        obj.element.remove();
+
+    });
+
+
+    objects = [];
+
+
+    score = 0;
+
+    lives = 3;
+
+    fallingSpeed = 250;
+
+
+    scoreText.innerText =
+        "0";
+
+    livesText.innerText =
+        "3";
+
+
+    playerX =
+        window.innerWidth / 2 - 30;
+
+
+    gameOver.style.display =
+        "none";
+
+
+    running = true;
+
+
+    lastTime =
+        performance.now();
+
+    lastSpawn =
+        performance.now();
+
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* ========================= */
+/* ОСНОВНОЙ ЦИКЛ */
+/* ========================= */
+
+function gameLoop(time) {
+
+    if (!running) {
+
+        return;
+
+    }
+
+
+    const delta =
+        Math.min(
+            (time - lastTime) / 1000,
+            0.05
+        );
+
+
+    lastTime = time;
+
+
+    /*
+        Двигаем Бору
+    */
+
+    movePlayer(delta);
+
+
+    /*
+        Двигаем предметы
+    */
+
+    updateObjects(delta);
+
+
+    /*
+        Создаём новый предмет
+    */
+
+    if (
+        time - lastSpawn > 650
+    ) {
+
+        createObject();
+
+        lastSpawn = time;
+
+
+        /*
+            Постепенно ускоряем игру
+        */
+
+        fallingSpeed += 3;
+
+    }
+
+
+    requestAnimationFrame(gameLoop);
+
+}
+const music = document.getElementById("music");
+
+let musicStarted = false;
+
+document.addEventListener("keydown", function () {
+
+    if (!musicStarted) {
+        music.volume = 0.4;
+        music.play();
+        musicStarted = true;
+    }
+
+});
+
+/* ========================= */
+/* ЗАПУСК */
+/* ========================= */
+
+player.style.left =
+    playerX + "px";
+
+
+requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
